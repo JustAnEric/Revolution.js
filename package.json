@@ -1,0 +1,17 @@
+{
+  "name": "revolution.js",
+  "version": "1.0.2",
+  "description": "A bot API for the platform Revolution. NodeJS LIBRARY\n[GitHub](https://github.com/JustAnEric/Revolution.js)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "MeowyCats2",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@types/node": "^18.0.6",
+    "node-fetch": "^3.2.6"
+  }
+}
