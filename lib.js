@@ -68,8 +68,10 @@ class Bot {
       return
     }
     console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.OkGreen}Running bot in servers: ${Color.EndC}${Color.OkBlue}${this.servers.join(", ")}${Color.EndC}`)
+    if (this.events["ready"]) { this.events.ready() }
+    else if (this.events["connect"]) { this.events.connect() };
     setInterval(async () => {
-      this.after_ping()
+      this.after_ping();
     }, 500) // POLLER REQUESTS TO THE WEBSITE ARE NOW DEPRECATED AND UNUSABLE.
   }
 
