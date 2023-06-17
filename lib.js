@@ -69,14 +69,7 @@ class Bot {
     }
     console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.OkGreen}Running bot in servers: ${Color.EndC}${Color.OkBlue}${this.servers.join(", ")}${Color.EndC}`)
     setInterval(async () => {
-      try {
-        const tokenCheck = await fetch("http://bot.run", {
-          method: "GET"
-        }) //PING TEST TO THE INTERNET
-        this.after_ping()
-      } catch (e) {
-        console.log(`${Color.OkBlue}Bot Runner: ${Color.EndC}${Color.OkCyan}Failed to ping the server.`)
-      }
+      this.after_ping()
     }, 500) // POLLER REQUESTS TO THE WEBSITE ARE NOW DEPRECATED AND UNUSABLE.
   }
 
