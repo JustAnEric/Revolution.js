@@ -24,6 +24,8 @@ server.listen("server_message", async (id, raw) => {
 });
   // EVENTS END
 ```
+> ⚠️ Events may be broken for you at this current moment. We are trying to fix this issue so use an alternative like Python for events.
+
 General Example:
 ```js
 const req = (async function () {
