@@ -76,32 +76,36 @@ class Bot {
   }
 
   async after_ping () {
-    for (let c of this.servers) {
-      const msgCheck = await fetch("http://revolution.ericplayzyt.repl.co/api/v1/get_server_messages", {
-        method: "GET",
-        headers: {
-          id: c
+    try {
+      for (let c of this.servers) {
+        const msgCheck = await fetch("http://revolution.ericplayzyt.repl.co/api/v1/get_server_messages", {
+          method: "GET",
+          headers: {
+            id: c
+          }
+        })
+        const msgResult = await msgCheck.json()
+        if (!(c in this.serverCache)) {
+          this.serverCache[c] = {"messages":msgResult.messages}
+          return
         }
-      })
-      const msgResult = await msgCheck.json()
-      if (!(c in this.serverCache)) {
-        this.serverCache[c] = {"messages":msgResult.messages}
-        return
-      }
-      const cacheMsgs = this.serverCache[c].messages
-      const lastMsg = msgResult.messages[msgResult.messages.length - 1]
-      
-      if (JSON.stringify(msgResult.messages) === JSON.stringify(cacheMsgs) || lastMsg.sent_by === this.bot_name) {
-        return
-      }
-      try {
-        if (this.events["server_message"]) {
-          this.events["server_message"](lastMsg)
+        const cacheMsgs = this.serverCache[c].messages
+        const lastMsg = msgResult.messages[msgResult.messages.length - 1]
+        
+        if (JSON.stringify(msgResult.messages) === JSON.stringify(cacheMsgs) || lastMsg.sent_by === this.bot_name) {
+          return
         }
-      } catch (e) {
-        console.log(`${Color.Warning}Error while running event:\n${e.stack}${Color.EndC}`)
+        try {
+          if (this.events["server_message"]) {
+            this.events["server_message"](lastMsg)
+          }
+        } catch (e) {
+          console.log(`${Color.Warning}Error while running event:\n${e.stack}${Color.EndC}`)
+        }
+        delete this.serverCache[c]
       }
-      delete this.serverCache[c]
+    } catch (e) {
+      console.log(`${Color.OkCyan}Failed to fetch messages:\n${e.stack}${Color.EndC}`)
     }
   }
   async send_message (server, message) {
