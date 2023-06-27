@@ -1,5 +1,5 @@
 # Revolution.js
-This is a NodeJS fork of the working Revolution API.
+This is a NodeJS recreation of the working Revolution API.
 
 Install our *Revolution.js Node library* by this command:
 ```npm
@@ -24,7 +24,7 @@ server.listen("server_message", async (id, raw) => {
 });
   // EVENTS END
 ```
-> ⚠️ Events may be broken for you at this current moment. We are trying to fix this issue so use an alternative like Python for events.
+> ⚠️ Events may be broken for you at this current moment due to the throttling of the Revolution servers. We are trying to fix this issue.
 
 General Example:
 ```js
@@ -39,6 +39,9 @@ const req = (async function () {
     name: 'Bot', // default: Bot; your bot name is here, will be included in different messages your bot sends.
     servers: ["revolution"]
   });
+
+  await server.run()
+
   // BOT SERVER END
   console.log(server)
   // EVENTS
