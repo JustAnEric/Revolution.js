@@ -1,6 +1,6 @@
 {
   "name": "revolution.js",
-  "version": "1.0.2",
+  "version": "1.1.2",
   "description": "A bot API for the platform Revolution. NodeJS LIBRARY\n[GitHub](https://github.com/JustAnEric/Revolution.js)",
   "main": "lib.js",
   "scripts": {
