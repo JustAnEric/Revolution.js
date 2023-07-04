@@ -13,13 +13,15 @@ const Color = {
 }
 
 export class commands {
-  constructor () {}
+  constructor (endpoint) {
+    this.endpoint = endpoint
+  }
   static async Bot () {
     console.log(`${Color.OkCyan}Internet Check: ${Color.EndC}${Color.Warning}Checking for valid internet...${Color.EndC}`)
 
     let succeeded = false
     try {
-      const internetCheck = await fetch("http://revolution.ericplayzyt.repl.co/api/v1/internet", {
+      const internetCheck = await fetch(this.endpoint + "/api/v1/internet", {
         method: "GET"
       })
       const checkResult = await internetCheck.json()
@@ -47,6 +49,7 @@ class Bot {
     this.bot = {
       "name": config.name || "Bot"
     }
+    this.endpoint = config.endpoint || "https://revolution-web.repl.co"
   }
   listen (name, func) {
     this.events[name] = func
@@ -56,7 +59,7 @@ class Bot {
       console.log(`${Color.Fail}Bot Runner: ${Color.EndC}${Color.Warning}Bot cannot be ran: token is not provided.`)
       return
     }
-    const tokenCheck = await fetch("http://revolution.ericplayzyt.repl.co/api/v1/python/token_exists", {
+    const tokenCheck = await fetch(this.endpoint + "/api/v1/python/token_exists", {
       method: "GET",
       headers: {
         token: this.token
@@ -78,7 +81,7 @@ class Bot {
   async after_ping () {
     try {
       for (let c of this.servers) {
-        const msgCheck = await fetch("http://revolution.ericplayzyt.repl.co/api/v1/get_server_messages", {
+        const msgCheck = await fetch(this.endpoint + "/api/v1/get_server_messages", {
           method: "GET",
           headers: {
             id: c
@@ -109,7 +112,7 @@ class Bot {
     }
   }
   async send_message (server, message) {
-    const sendReq = await fetch("http://revolution.ericplayzyt.repl.co/api/v1/servers/send_message", {
+    const sendReq = await fetch(this.endpoint + "/api/v1/servers/send_message", {
       method: "GET",
       headers: {
          id: server,
