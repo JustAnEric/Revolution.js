@@ -30,20 +30,20 @@ General Example:
 ```js
 const req = (async function () {
   // NESSACERY IMPORTS
-  const { commands } = require('revolution.js');
+  const { Bot } = import('revolution.js');
   // NESSACERY IMPORTS END
 
-  // BOT SERVER  
-  const server = new commands().Bot({
+  // BOT CLIENT  
+  const client = new Bot({
     token: process.env.token, // default: null; your token is here, authorizes your bot to our servers.
     name: 'Bot', // default: Bot; your bot name is here, will be included in different messages your bot sends.
     servers: ["revolution"]
   });
 
-  await server.run()
+  await client.run()
 
-  // BOT SERVER END
-  console.log(server)
+  // BOT CLIENT END
+  console.log(client)
   // EVENTS
   
   server.listen("ready", () => {
