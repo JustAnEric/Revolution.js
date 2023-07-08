@@ -24,7 +24,6 @@ server.listen("server_message", async (id, raw) => {
 });
   // EVENTS END
 ```
-> ⚠️ Events may be broken for you at this current moment due to the throttling of the Revolution servers. We are trying to fix this issue.
 
 General Example:
 ```js
