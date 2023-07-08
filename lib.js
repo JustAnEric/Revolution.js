@@ -17,11 +17,12 @@ export class commands {
   constructor () {
   }
   static async Bot () {
+    console.log(`${Color.Warning}Commands: ${Color.EndC}${Color.OkBlue}Commands is deprecated. Please use the Bot class directly.`)
     return Bot
   }
 }
 
-class Bot {
+export class Bot {
   constructor (config) {
     this.token = config.token || null
     this.servers = config.servers || []
