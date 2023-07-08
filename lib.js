@@ -14,8 +14,7 @@ const Color = {
 }
 
 export class commands {
-  constructor (endpoint) {
-    this.endpoint = endpoint
+  constructor () {
   }
   static async Bot () {
     return Bot
