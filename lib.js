@@ -71,7 +71,7 @@ export class Bot {
       ws.send(JSON.stringify({'type':'follow', 'channels': this.servers, "token": this.token}));
       console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.OkGreen}Running bot in servers: ${Color.EndC}${Color.OkBlue}${this.servers.join(", ")}${Color.EndC}`)
       try {
-        this.events.filter(c => c.type === "ready" || c.type === "connect").forEach(c.func())
+        this.events.filter(c => c.type === "ready" || c.type === "connect").forEach(c => c.func())
       } catch (e) {
         console.log(`${Color.Warning}Error while running event:\n${e.stack}${Color.EndC}`)
       }
@@ -81,7 +81,7 @@ export class Bot {
       const obj = JSON.parse(data)
       if (obj.type === "messageCreate") {
         try {
-          this.events.filter(c => c.type === "server_message").forEach(c.func({"message": obj.message, "sent_by": obj.sent_by, "channel": obj.channel}))
+          this.events.filter(c => c.type === "server_message").forEach(c => c.func({"message": obj.message, "sent_by": obj.sent_by, "channel": obj.channel}))
         } catch (e) {
           console.log(`${Color.Warning}Error while running event:\n${e.stack}${Color.EndC}`)
         }
