@@ -51,11 +51,13 @@ class Bot {
       console.log(`${Color.Fail}Bot Runner: ${Color.EndC}${Color.Warning}Bot cannot be ran: token is invalid.`)
       return
     }
-    console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.OkGreen}Running bot in servers: ${Color.EndC}${Color.OkBlue}${this.servers.join(", ")}${Color.EndC}`)
 
+    console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.Warning}Connecting to the server...`}
+    
     const ws = new WebSocket(this.socketURL);
 
     ws.on("unexpected-response", (req, res) => {
+      console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.Fail}Failed to connect to Revolution due to an unexpected response. Please try again later.${Color.EndC}`)
       console.error(res)
     })
 
@@ -63,6 +65,7 @@ class Bot {
     
     ws.on('open', () => {
       ws.send(JSON.stringify({'type':'follow', 'channels': this.servers, "token": this.token}));
+      console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.OkGreen}Running bot in servers: ${Color.EndC}${Color.OkBlue}${this.servers.join(", ")}${Color.EndC}`)
       try {
         if (this.events["ready"]) {
           this.events["ready"]()
