@@ -52,7 +52,7 @@ class Bot {
       return
     }
 
-    console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.Warning}Connecting to the server...`}
+    console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.Warning}Connecting to the server...`)
     
     const ws = new WebSocket(this.socketURL);
 
