@@ -26,7 +26,7 @@ export class Bot {
   constructor (config) {
     this.token = config.token || null
     this.servers = config.servers || []
-    this.events = {}
+    this.events = []
     this.bot = {
       "name": config.name || "Bot"
     }
@@ -34,7 +34,10 @@ export class Bot {
     this.socketURL = config.socketURL || "wss://revolution-web.repl.co"
   }
   listen (name, func) {
-    this.events[name] = func
+    this.events.push({"type": name, func})
+  }
+  removeListener (func) {
+    this.events.splice(this.events.indexOf(func), 1)
   }
   async run () {
     if (!this.token) {
@@ -68,11 +71,7 @@ export class Bot {
       ws.send(JSON.stringify({'type':'follow', 'channels': this.servers, "token": this.token}));
       console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.OkGreen}Running bot in servers: ${Color.EndC}${Color.OkBlue}${this.servers.join(", ")}${Color.EndC}`)
       try {
-        if (this.events["ready"]) {
-          this.events["ready"]()
-        } else if (this.events["connect"]) {
-          this.events["connect"]()
-        }
+        this.events.filter(c => c.type === "ready" || c.type === "connect").forEach(c.func())
       } catch (e) {
         console.log(`${Color.Warning}Error while running event:\n${e.stack}${Color.EndC}`)
       }
@@ -82,9 +81,7 @@ export class Bot {
       const obj = JSON.parse(data)
       if (obj.type === "messageCreate") {
         try {
-          if (this.events["server_message"]) {
-            this.events["server_message"]({"message": obj.message, "sent_by": obj.sent_by, "channel": obj.channel})
-          }
+          this.events.filter(c => c.type === "server_message").forEach(c.func({"message": obj.message, "sent_by": obj.sent_by, "channel": obj.channel}))
         } catch (e) {
           console.log(`${Color.Warning}Error while running event:\n${e.stack}${Color.EndC}`)
         }
