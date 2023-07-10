@@ -54,7 +54,7 @@ export class Bot {
   removeListener (func) {
     this.events.splice(this.events.indexOf(func), 1)
   }
-  removeListenersOfType (type) {
+  unlistenType (type) {
     for (let event of this.events) {
       if (event.type === type) {
         this.events.splice(this.events.indexOf(event.func), 1)
