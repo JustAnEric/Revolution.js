@@ -257,11 +257,8 @@ export class Channel {
     return sendRes
   }
   async fetch_messages () {
-    const sendReq = await fetch(this.bot.endpoint + "/api/v1/get_server_messages", {
-      method: "GET",
-      headers: {
-        id: this.id
-      }
+    const sendReq = await fetch(this.bot.endpoint + "/get_new_messages/s/" + this.id, {
+      method: "GET"
     })
     const sendRes = await sendReq.json()
     return sendRes
