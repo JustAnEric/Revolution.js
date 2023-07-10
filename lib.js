@@ -54,6 +54,16 @@ export class Bot {
   removeListener (func) {
     this.events.splice(this.events.indexOf(func), 1)
   }
+  removeListenersOfType (type) {
+    for (let event of this.events) {
+      if (event.type === type) {
+        this.events.splice(this.events.indexOf(event.func), 1)
+      }
+    }
+  }
+  resetListeners () {
+    this.events = []
+  }
   async run () {
     if (!this.token) {
       console.log(`${Color.Fail}Bot Runner: ${Color.EndC}${Color.Warning}Bot cannot be ran: token is not provided.`)
