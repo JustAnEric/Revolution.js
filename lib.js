@@ -14,9 +14,10 @@ const Color = {
 }
 
 export class commands {
-  constructor (bot, prefix) {
+  constructor (bot, prefix, help) {
     this.bot = bot
     this.prefix = prefix
+    this.help = help
     this.commands = []
   }
   command (name, parameters, config, callback) {
@@ -43,7 +44,7 @@ export class Bot {
     this.socketURL = config.socketURL || "wss://revolution-web.repl.co"
     this.cache = {}
     if (config.commands) {
-      this.commands = new commands(this, config.prefix)
+      this.commands = new commands(this, config.prefix, config.help)
     }
     this.retry = config.retry
   }
@@ -176,7 +177,13 @@ const process_commands = (bot, obj) => {
               parameters.push(commandParts[i]);
             }
           }
-          const command = bot.commands.commands.filter(c => c.name === commandName)[0]
+  if (commandName === "help" && bot.commands.help) {
+    const message = new Message(obj, bot)
+    message.reply("<b>Commands:</b><br/>" + bot.commands.commands.map(c => bot.commands.prefix + c.name + (c.config && c.config.description ? "- <i>" + c.config.description + "</i>" : "")).join("<br/>"))
+    return
+  }
+  const command = bot.commands.commands.filter(c => c.name === commandName)[0]
+  if (!command) return
   if (command.config && command.config.keywordOnly) {
     command.callback(new Message(obj, bot), parameters)
   } else {
