@@ -92,6 +92,17 @@ server.listen("server_message", async (id, data) => {
 // EVENTS END
 ```
 
+#### Commands
+```js
+const client = new Bot({
+  token: process.env.token,
+  name: 'Bot',
+  channels: ["revolution~chat"],
+  commands: true, // to enable commands
+  prefix: "!", // the prefix you want,
+  help: true // if you want a help command
+});
+```
 ## Migrating from Older Versions
 ### 1.2 to 1.3
 * Getting the ID of the channel of a message has been changed from `message.channel` to `message.channel.id`
