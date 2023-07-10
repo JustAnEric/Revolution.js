@@ -12,11 +12,11 @@ npm i revolution.js
 ```js
 // EVENTS
   
-server.listen("ready", () => {
+client.listen("ready", () => {
   console.log("Hello. The bot is online!")
 });
   
-server.listen("server_message", async (id, raw) => {
+client.listen("server_message", async (id, raw) => {
   console.log("A message has been sent by my users!");
   if (raw.message == ".super") {
     await bot.send_message(id, raw.message); //repeat the message back to the user of the server!
@@ -46,11 +46,11 @@ const req = (async function () {
   console.log(client)
   // EVENTS
   
-  server.listen("ready", () => {
+  client.listen("ready", () => {
     console.log("Hello. The bot is online!")
   });
   
-  server.listen("server_message", async (id, data) => {
+  client.listen("server_message", async (id, data) => {
     console.log("A message has been sent by my users!");
     if (data.content === ".super") {
       await data.channel.send(data.content); //repeat the message back to the user of the server!
@@ -79,11 +79,11 @@ await client.run()
 console.log(client)
 // EVENTS
   
-server.listen("ready", () => {
+client.listen("ready", () => {
   console.log("Hello. The bot is online!")
 });
   
-server.listen("server_message", async (id, data) => {
+client.listen("server_message", async (id, data) => {
   console.log("A message has been sent by my users!");
   if (data.content === ".super") {
     await data.channel.send(data.content); //repeat the message back to the user of the server!
