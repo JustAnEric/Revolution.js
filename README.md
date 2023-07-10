@@ -37,7 +37,7 @@ const req = (async function () {
   const client = new Bot({
     token: process.env.token, // default: null; your token is here, authorizes your bot to our servers.
     name: 'Bot', // default: Bot; your bot name is here, will be included in different messages your bot sends.
-    servers: ["revolution~chat"]
+    channels: ["revolution~chat"]
   });
 
   await client.run()
@@ -70,7 +70,7 @@ import { Bot } from 'revolution.js';
 const client = new Bot({
   token: process.env.token, // default: null; your token is here, authorizes your bot to our servers.
   name: 'Bot', // default: Bot; your bot name is here, will be included in different messages your bot sends.
-  servers: ["revolution~chat"]
+  channels: ["revolution~chat"]
 });
 
 await client.run()
@@ -91,3 +91,12 @@ server.listen("server_message", async (id, data) => {
 });
 // EVENTS END
 ```
+
+## Migrating from Older Versions
+### 1.2 to 1.3
+* Getting the ID of the channel of a message has been changed from `message.channel` to `message.channel.id`
+* Getting the content of a message is changed from `message.message` to `message.content`
+* The `servers` argument in the Bot constructor has been changed to `channels`
+
+### 1.0 to 1.2
+* Instead of using `commands.Bot()`, the `Bot` class should be used directly
