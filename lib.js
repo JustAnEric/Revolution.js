@@ -191,7 +191,7 @@ const process_commands = (bot, obj) => {
 
 export class Message {
   constructor (obj, bot) {
-    this.message = obj.message
+    this.content = obj.message
     this.sent_by = obj.sent_by
     this.channel = new Channel(obj.channel, bot)
     this.bot = bot
