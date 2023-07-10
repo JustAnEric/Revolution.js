@@ -261,7 +261,7 @@ export class Channel {
       method: "GET"
     })
     const sendRes = await sendReq.json()
-    return sendRes
+    return sendRes.messages.map(msg => new Message(msg, this.bot))
   }
 }
 
