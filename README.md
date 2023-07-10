@@ -26,7 +26,7 @@ server.listen("server_message", async (id, raw) => {
 ```
 
 #### General Example
-CommonJS:
+##### CommonJS
 ```js
 const req = (async function () {
   // NESSACERY IMPORTS
@@ -60,7 +60,7 @@ const req = (async function () {
 })();
 ```
 
-ES6
+##### ES6
 ```js
 // NESSACERY IMPORTS
 import { Bot } from 'revolution.js';
