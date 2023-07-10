@@ -19,8 +19,8 @@ export class commands {
     this.prefix = prefix
     this.commands = []
   }
-  command (name, parameters, callback, config) {
-    this.commands.push({name, parameters, callback, config})
+  command (name, parameters, config, callback) {
+    this.commands.push({name, parameters, config, callback})
   }
   static async Bot () {
     console.log(`${Color.Warning}Commands: ${Color.EndC}${Color.OkBlue}Commands.Bot is deprecated. Please use the Bot class directly.`)
@@ -31,16 +31,21 @@ export class commands {
 export class Bot {
   constructor (config) {
     this.token = config.token || null
-    this.servers = config.servers || []
+    if (config.servers) {
+      console.log(`${Color.Warning}Bot: ${Color.EndC}${Color.OkBlue}config.servers is deprecated. Please use config.channels.`)
+    }
+    this.channels = config.channels || config.servers || []
     this.events = []
     this.bot = {
       "name": config.name || "Bot"
     }
     this.endpoint = config.endpoint || "https://revolution-web.repl.co"
     this.socketURL = config.socketURL || "wss://revolution-web.repl.co"
+    this.cache = {}
     if (config.commands) {
       this.commands = new commands(this, config.prefix)
     }
+    this.retry = config.retry
   }
   listen (name, func) {
     this.events.push({"type": name, func})
@@ -75,14 +80,34 @@ export class Bot {
     })
 
     ws.on('error', console.error);
+
+    ws.on('close', () => {
+      console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.Warning}The connection closed.${Color.EndC}`)
+      this.events.filter(c => c.type === "close").forEach(c => c.func())
+      if (this.retry) {
+        this.run()
+      }
+    });
     
-    ws.on('open', () => {
-      ws.send(JSON.stringify({'type':'follow', 'channels': this.servers, "token": this.token}));
-      console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.OkGreen}Running bot in servers: ${Color.EndC}${Color.OkBlue}${this.servers.join(", ")}${Color.EndC}`)
+    ws.on('open', async () => {
+      ws.send(JSON.stringify({'type':'follow', 'channels': this.channels, "token": this.token}));
+      console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.OkGreen}Running bot in channels: ${Color.EndC}${Color.OkBlue}${this.channels.join(", ")}${Color.EndC}`)
       try {
         this.events.filter(c => c.type === "ready" || c.type === "connect").forEach(c => c.func())
       } catch (e) {
         console.log(`${Color.Warning}Error while running event:\n${e.stack}${Color.EndC}`)
+      }
+      for (let channel of this.channels) {
+        const server = channel.split("~")[0]
+        if (server in this.cache) continue
+        const sendReq = await fetch(this.endpoint + "/api/v1/get_server", {
+          method: "GET",
+          headers: {
+            id: server
+          }
+        })
+        const sendRes = await sendReq.json()
+        this.cache[server] = sendRes
       }
     });
 
@@ -100,18 +125,31 @@ export class Bot {
       }
     });
   }
+  command (...args) {
+    if (this.commands) {
+      this.commands.command(...args)
+    } else {
+      console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.Fail}The bot client doesn't have commands enabled. Please enable it by setting config.commands to true.${Color.EndC}`)
+    }
+  }
   async send_message (channel, message) {
     const sendReq = await fetch(this.endpoint + "/api/v1/servers/send_message", {
       method: "GET",
       headers: {
         id: channel,
         message,
-        sent_by: this.bot.name,
+        "sent-by": this.bot.name,
         token: this.token
       }
     })
     const sendRes = await sendReq.json()
     return sendRes
+  }
+  fetch_channel (id) {
+    return new Channel(id, bot)
+  }
+  fetch_server (id) {
+    return new Server(id, bot)
   }
 }
 
@@ -139,12 +177,16 @@ const process_commands = (bot, obj) => {
             }
           }
           const command = bot.commands.commands.filter(c => c.name === commandName)[0]
-          let result = {}
-          for (let [i, param] of Object.entries(parameters)) {
-            if (i > command.parameters.length - 1) break
-            result[command.parameters[i]] = param
-          }
-          command.callback(new Message(obj, this), result)
+  if (command.config && command.config.keywordOnly) {
+    command.callback(new Message(obj, bot), parameters)
+  } else {
+    let result = {}
+    for (let [i, param] of Object.entries(parameters)) {
+      if (i > command.parameters.length - 1) break
+      result[command.parameters[i]] = param
+    }
+    command.callback(new Message(obj, bot), result)
+  }
 }
 
 export class Message {
@@ -153,29 +195,52 @@ export class Message {
     this.sent_by = obj.sent_by
     this.channel = new Channel(obj.channel, bot)
     this.bot = bot
+    this.partial = false
+  }
+  async reply (message) {
+    const sendReq = await fetch(this.bot.endpoint + "/api/v1/servers/send_message", {
+      method: "GET",
+      headers: {
+        id: this.channel.id,
+        message,
+        "sent-by": this.bot.bot.name,
+        token: this.bot.token
+      }
+    })
+    const sendRes = await sendReq.json()
+    return sendRes
   }
 }
 
 export class Channel {
-  constructor (id, bot) {
+  constructor (id, bot, server) {
     this.id = id
     this.bot = bot
+    const serverID = this.id.split("~")[0]
+    if (server) {
+      this.server = server
+    } else if (serverID in bot.cache) {
+      this.server = new Server(bot.cache[serverID], bot)
+    } else {
+      this.server = new PartialServer(serverID, bot)
+    }
+    this.partial = false
   }
-  async send_message (message) {
-    const sendReq = await fetch(this.endpoint + "/api/v1/servers/send_message", {
+  async send (message) {
+    const sendReq = await fetch(this.bot.endpoint + "/api/v1/servers/send_message", {
       method: "GET",
       headers: {
         id: this.id,
         message,
-        sent_by: bot.bot.name,
-        token: bot.token
+        "sent-by": this.bot.bot.name,
+        token: this.bot.token
       }
     })
     const sendRes = await sendReq.json()
     return sendRes
   }
   async fetch_messages () {
-    const sendReq = await fetch(this.endpoint + "/api/v1/get_server_messages", {
+    const sendReq = await fetch(this.bot.endpoint + "/api/v1/get_server_messages", {
       method: "GET",
       headers: {
         id: this.id
@@ -183,5 +248,51 @@ export class Channel {
     })
     const sendRes = await sendReq.json()
     return sendRes
+  }
+}
+
+export class PartialServer {
+  constructor (id, bot) {
+    this.id = id
+    this.bot = bot
+    this.partial = true
+  }
+  async fetch () {
+    const sendReq = await fetch(this.bot.endpoint + "/api/v1/get_server", {
+      method: "GET",
+      headers: {
+        id: this.id
+      }
+    })
+    const sendRes = await sendReq.json()
+    this.bot.cache[this.id] = sendRes
+    return new Server(sendRes, bot)
+  }
+}
+
+export class Server {
+  constructor (data, bot) {
+    this.name = data.name
+    this.id = data.serverid
+    this.abbr = data.abbr
+    this.icon = data.imgurl
+    this.color = data.color
+    this.channels = data.channels.map(c => new Channel(this.id + "~" + c, bot, this))
+    this.roles = data.roles
+    this.emojis = data.emojis
+    this.emotes = data.emotes
+    this.members = data.users_chatted
+    this.partial = false
+  }
+  async fetch () {
+    const sendReq = await fetch(this.bot.endpoint + "/api/v1/get_server", {
+      method: "GET",
+      headers: {
+        id: this.id
+      }
+    })
+    const sendRes = await sendReq.json()
+    this.bot.cache[this.id] = sendRes
+    return new Server(sendRes, bot)
   }
 }
