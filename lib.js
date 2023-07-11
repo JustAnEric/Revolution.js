@@ -209,7 +209,14 @@ const process_commands = (bot, obj) => {
 export class Message {
   constructor (obj, bot) {
     this.content = obj.message
-    this.sent_by = new User({"bot": !!obj.bot, "name": obj.sent_by})
+    let server = null
+    const serverID = obj.channel.split("~")[0]
+    if (serverID in bot.cache) {
+      server = new Server(bot.cache[serverID], bot)
+    } else {
+      server = new PartialServer(serverID, bot)
+    }
+    this.sent_by = new User({"bot": !!obj.bot, "name": obj.sent_by, "server": server})
     this.timestamp = new Date(obj.timestamp)
     this.channel = new Channel(obj.channel, bot)
     this._bot = bot
@@ -296,7 +303,7 @@ export class Server {
     this.roles = data.roles
     this.emojis = data.emojis
     this.emotes = data.emotes
-    this.members = data.users_chatted.map(c => new User({"name": c.name}))
+    this.members = data.users_chatted.map(c => new User({"name": c.name, "server": this}))
     this.partial = false
     this._bot = bot
   }
@@ -313,10 +320,11 @@ export class Server {
   }
 }
 
-class User {
+class Member {
   constructor (data, bot) {
     this.bot = data.bot
     this.name = data.name
+    this.server = data.server
     this._bot = bot
   }
 }
