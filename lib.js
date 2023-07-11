@@ -209,19 +209,20 @@ const process_commands = (bot, obj) => {
 export class Message {
   constructor (obj, bot) {
     this.content = obj.message
-    this.sent_by = obj.sent_by
+    this.sent_by = new User({"bot": !!obj.bot, "name": obj.sent_by})
+    this.timestamp = new Date(obj.timestamp)
     this.channel = new Channel(obj.channel, bot)
-    this.bot = bot
+    this._bot = bot
     this.partial = false
   }
   async reply (message) {
-    const sendReq = await fetch(this.bot.endpoint + "/api/v1/servers/send_message", {
+    const sendReq = await fetch(this._bot.endpoint + "/api/v1/servers/send_message", {
       method: "GET",
       headers: {
         id: this.channel.id,
         message,
-        "sent-by": this.bot.bot.name,
-        token: this.bot.token
+        "sent-by": this._bot.bot.name,
+        token: this._bot.token
       }
     })
     const sendRes = await sendReq.json()
@@ -232,7 +233,7 @@ export class Message {
 export class Channel {
   constructor (id, bot, server) {
     this.id = id
-    this.bot = bot
+    this._bot = bot
     const serverID = this.id.split("~")[0]
     if (server) {
       this.server = server
@@ -244,43 +245,43 @@ export class Channel {
     this.partial = false
   }
   async send (message) {
-    const sendReq = await fetch(this.bot.endpoint + "/api/v1/servers/send_message", {
+    const sendReq = await fetch(this._bot.endpoint + "/api/v1/servers/send_message", {
       method: "GET",
       headers: {
         id: this.id,
         message,
-        "sent-by": this.bot.bot.name,
-        token: this.bot.token
+        "sent-by": this._bot.bot.name,
+        token: this._bot.token
       }
     })
     const sendRes = await sendReq.json()
     return sendRes
   }
   async fetch_messages () {
-    const sendReq = await fetch(this.bot.endpoint + "/get_new_messages/s/" + this.id, {
+    const sendReq = await fetch(this._bot.endpoint + "/get_new_messages/s/" + this.id, {
       method: "GET"
     })
     const sendRes = await sendReq.json()
-    return sendRes.messages.map(msg => new Message(msg, this.bot))
+    return sendRes.messages.map(msg => new Message(msg, this._bot))
   }
 }
 
 export class PartialServer {
   constructor (id, bot) {
     this.id = id
-    this.bot = bot
+    this._bot = bot
     this.partial = true
   }
   async fetch () {
-    const sendReq = await fetch(this.bot.endpoint + "/api/v1/get_server", {
+    const sendReq = await fetch(this._bot.endpoint + "/api/v1/get_server", {
       method: "GET",
       headers: {
         id: this.id
       }
     })
     const sendRes = await sendReq.json()
-    this.bot.cache[this.id] = sendRes
-    return new Server(sendRes, bot)
+    this._bot.cache[this.id] = sendRes
+    return new Server(sendRes, this._bot)
   }
 }
 
@@ -295,18 +296,27 @@ export class Server {
     this.roles = data.roles
     this.emojis = data.emojis
     this.emotes = data.emotes
-    this.members = data.users_chatted
+    this.members = data.users_chatted.map(c => new User({"name": c.name}))
     this.partial = false
+    this._bot = bot
   }
   async fetch () {
-    const sendReq = await fetch(this.bot.endpoint + "/api/v1/get_server", {
+    const sendReq = await fetch(this._bot.endpoint + "/api/v1/get_server", {
       method: "GET",
       headers: {
         id: this.id
       }
     })
     const sendRes = await sendReq.json()
-    this.bot.cache[this.id] = sendRes
-    return new Server(sendRes, bot)
+    this._bot.cache[this.id] = sendRes
+    return new Server(sendRes, this._bot)
+  }
+}
+
+class User {
+  constructor (data, bot) {
+    this.bot = data.bot
+    this.name = data.name
+    this._bot = bot
   }
 }
