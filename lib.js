@@ -123,7 +123,7 @@ export class Bot {
           process_commands(this, obj)
         }
       } else if (obj.type === "serverInfo") {
-        this._bot.cache[obj.server.serverid] = obj.server
+        this.cache[obj.server.serverid] = obj.server
       }
     });
   }
@@ -207,7 +207,7 @@ export class Message {
     } else {
       server = new PartialServer(serverID, bot)
     }
-    this.sent_by = from_cache(bot, obj.author_id, new PartialMember({"bot": !!obj.bot, "name": obj.sent_by, "id", obj.author_id, "server": server}))
+    this.sent_by = from_cache(bot, obj.author_id, new PartialMember({"bot": !!obj.bot, "name": obj.sent_by, "id": obj.author_id, "server": server}))
     this.timestamp = new Date(obj.timestamp)
     this.channel = new Channel(obj.channel, bot)
     this._bot = bot
@@ -320,7 +320,7 @@ class PartialMember {
     this._bot = bot
     this.partial = true
   }
-  fetch () {
+  async fetch () {
     const sendReq = await fetch(this._bot.endpoint + "/api/v1/get_user", {
       method: "GET",
       headers: {
