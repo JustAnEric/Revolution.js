@@ -207,7 +207,7 @@ export class Message {
     } else {
       server = new PartialServer(serverID, bot)
     }
-    this.sent_by = new User({"bot": !!obj.bot, "name": obj.sent_by, "server": server})
+    this.sent_by = from_cache(bot, obj.author_id, new PartialMember({"bot": !!obj.bot, "name": obj.sent_by, "id", obj.author_id, "server": server}))
     this.timestamp = new Date(obj.timestamp)
     this.channel = new Channel(obj.channel, bot)
     this._bot = bot
@@ -294,7 +294,7 @@ export class Server {
     this.roles = data.roles
     this.emojis = data.emojis
     this.emotes = data.emotes
-    this.members = data.users_chatted.map(c => new User({"name": c.name, "server": this}))
+    this.members = data.users_chatted.map(c => from_cache(bot, c.id, new PartialMember({"name": c.name, "id": c.id, "server": this})))
     this.partial = false
     this._bot = bot
   }
@@ -311,11 +311,45 @@ export class Server {
   }
 }
 
-class Member {
+class PartialMember {
   constructor (data, bot) {
     this.bot = data.bot
     this.name = data.name
+    this.id = data.id
     this.server = data.server
     this._bot = bot
+    this.partial = true
+  }
+  fetch () {
+    const sendReq = await fetch(this._bot.endpoint + "/api/v1/get_user", {
+      method: "GET",
+      headers: {
+        id: this.id
+      }
+    })
+    const sendRes = await sendReq.json()
+    this._bot.cache[this.id] = sendRes
+    return new Member(sendRes, this.server, this._bot)
+  }
+}
+
+export class Member {
+  constructor (data, server, bot) {
+    this.bot = data.bot
+    this.name = data.name
+    this.discriminator = data.discriminator
+    this.description = data.description
+    this.id = data.id
+    this.server = server
+    this._bot = bot
+    this.partial = true
+  }
+}
+
+const from_cache = (bot, id, data) => {
+  if (id in bot.cache) {
+    return bot.cache[id]
+  } else {  
+    return data
   }
 }
