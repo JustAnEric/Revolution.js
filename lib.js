@@ -101,24 +101,13 @@ export class Bot {
     });
     
     ws.on('open', async () => {
-      ws.send(JSON.stringify({'type':'follow', 'channels': this.channels, "token": this.token}));
+      ws.send(JSON.stringify({"type": "login", "token": this.token}))
+      ws.send(JSON.stringify({"type": "follow", "channels": this.channels, "token": this.token}));
       console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.OkGreen}Running bot in channels: ${Color.EndC}${Color.OkBlue}${this.channels.join(", ")}${Color.EndC}`)
       try {
         this.events.filter(c => c.type === "ready" || c.type === "connect").forEach(c => c.func())
       } catch (e) {
         console.log(`${Color.Warning}Error while running event:\n${e.stack}${Color.EndC}`)
-      }
-      for (let channel of this.channels) {
-        const server = channel.split("~")[0]
-        if (server in this.cache) continue
-        const sendReq = await fetch(this.endpoint + "/api/v1/get_server", {
-          method: "GET",
-          headers: {
-            id: server
-          }
-        })
-        const sendRes = await sendReq.json()
-        this.cache[server] = sendRes
       }
     });
 
@@ -133,6 +122,8 @@ export class Bot {
         if (this.commands && obj.message.startsWith(this.commands.prefix)) {
           process_commands(this, obj)
         }
+      } else if (obj.type === "serverInfo") {
+        this._bot.cache[obj.server.serverid] = obj.server
       }
     });
   }
