@@ -47,6 +47,7 @@ export class Bot {
       this.commands = new commands(this, config.prefix, config.help)
     }
     this.retry = config.retry
+    this.debug = config.debug
   }
   listen (name, func) {
     this.events.push({"type": name, func})
@@ -81,7 +82,7 @@ export class Bot {
       return
     }
 
-    console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.Warning}Connecting to the server...`)
+    if (this.debug) console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.Warning}Connecting to the server...`)
     
     const ws = new WebSocket(this.socketURL);
 
@@ -93,7 +94,7 @@ export class Bot {
     ws.on('error', console.error);
 
     ws.on('close', () => {
-      console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.Warning}The connection closed.${Color.EndC}`)
+      if (this.debug) console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.Warning}The connection closed.${Color.EndC}`)
       this.events.filter(c => c.type === "close").forEach(c => c.func())
       if (this.retry) {
         this.run()
@@ -103,12 +104,6 @@ export class Bot {
     ws.on('open', async () => {
       ws.send(JSON.stringify({"type": "login", "token": this.token}))
       ws.send(JSON.stringify({"type": "follow", "channels": this.channels, "token": this.token}));
-      console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.OkGreen}Running bot in channels: ${Color.EndC}${Color.OkBlue}${this.channels.join(", ")}${Color.EndC}`)
-      try {
-        this.events.filter(c => c.type === "ready" || c.type === "connect").forEach(c => c.func())
-      } catch (e) {
-        console.log(`${Color.Warning}Error while running event:\n${e.stack}${Color.EndC}`)
-      }
     });
 
     ws.on('message', (data) => {
@@ -124,6 +119,17 @@ export class Bot {
         }
       } else if (obj.type === "serverInfo") {
         this.cache[obj.server.serverid] = obj.server
+        for (let user of obj.server.users_chatted) {
+          this.cache[user.id] = user
+        }
+      } else if (obj.type === "ready") {
+        this.cache[obj.user.id] = obj.user
+        if (this.debug) console.log(`${Color.OkCyan}Bot Runner: ${Color.EndC}${Color.OkGreen}Running bot in channels: ${Color.EndC}${Color.OkBlue}${this.channels.join(", ")}${Color.EndC}`)
+        try {
+          this.events.filter(c => c.type === "ready" || c.type === "connect").forEach(c => c.func())
+        } catch (e) {
+          console.log(`${Color.Warning}Error while running event:\n${e.stack}${Color.EndC}`)
+        }
       }
     });
   }
@@ -207,7 +213,12 @@ export class Message {
     } else {
       server = new PartialServer(serverID, bot)
     }
-    this.sent_by = from_cache(bot, obj.author_id, new PartialMember({"bot": !!obj.bot, "name": obj.sent_by, "id": obj.author_id, "server": server}))
+    const userID = obj.author_id
+    if (userID in bot.cache) {
+      this.sent_by = new Member(bot.cache[userID], server, bot)
+    } else {
+      this.sent_by = new PartialMember({"bot": !!obj.bot, "name": obj.sent_by, "id": obj.author_id, "server": server}, bot)
+    }
     this.timestamp = new Date(obj.timestamp)
     this.channel = new Channel(obj.channel, bot)
     this._bot = bot
@@ -294,7 +305,14 @@ export class Server {
     this.roles = data.roles
     this.emojis = data.emojis
     this.emotes = data.emotes
-    this.members = data.users_chatted.map(c => from_cache(bot, c.id, new PartialMember({"name": c.name, "id": c.id, "server": this})))
+    this.members = data.users_chatted.map(c => {
+      const userID = c.id
+      if (userID in bot.cache) {
+        return new Member(bot.cache[userID], this, bot)
+      } else {
+        return new PartialMember({"name": c.name, "id": c.id, "server": this}, bot)
+      }
+    })
     this.partial = false
     this._bot = bot
   }
@@ -342,7 +360,18 @@ export class Member {
     this.id = data.id
     this.server = server
     this._bot = bot
-    this.partial = true
+    this.partial = false
+  }
+  async fetch () {
+    const sendReq = await fetch(this._bot.endpoint + "/api/v1/get_user", {
+      method: "GET",
+      headers: {
+        id: this.id
+      }
+    })
+    const sendRes = await sendReq.json()
+    this._bot.cache[this.id] = sendRes
+    return new Member(sendRes, this.server, this._bot)
   }
 }
 
