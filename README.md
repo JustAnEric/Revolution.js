@@ -57,7 +57,6 @@ client.listen("server_message", async (id, data) => {
 // EVENTS END
 ```
 
-#### CommonJS
 ##### CommonJS
 ```js
 const req = (async function () {
