@@ -109,3 +109,6 @@ const client = new Bot({
 
 ### 1.0 to 1.2
 * Instead of using `commands.Bot()`, the `Bot` class should be used directly
+
+## Documentation
+You can find the documentation at https://github.com/JustAnEric/Revolution.js/wiki/Documentation
