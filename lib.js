@@ -266,9 +266,13 @@ export class Channel {
     const sendRes = await sendReq.json()
     return sendRes
   }
-  async fetch_messages () {
-    const sendReq = await fetch(this._bot.endpoint + "/get_new_messages/s/" + this.id, {
-      method: "GET"
+  async fetch_messages (amount, skip) {
+    const sendReq = await fetch(this._bot.endpoint + "/get_messages/s/" + this.id, {
+      method: "GET",
+      headers: {
+        "amount": amount,
+        "skip": skip
+      }
     })
     const sendRes = await sendReq.json()
     return sendRes.messages.map(msg => new Message(msg, this._bot))
