@@ -26,6 +26,38 @@ client.listen("server_message", async (id, raw) => {
 ```
 
 #### General Example
+##### ES6
+```js
+// NESSACERY IMPORTS
+import { Bot } from 'revolution.js';
+// NESSACERY IMPORTS END
+
+// BOT CLIENT  
+const client = new Bot({
+  token: process.env.token, // default: null; your token is here, authorizes your bot to our servers.
+  channels: ["revolution~chat"]
+});
+
+await client.run()
+
+// BOT CLIENT END
+console.log(client)
+// EVENTS
+  
+client.listen("ready", () => {
+  console.log("Hello. The bot is online!")
+});
+  
+client.listen("server_message", async (id, data) => {
+  console.log("A message has been sent by my users!");
+  if (data.content === ".super") {
+    await data.channel.send(data.content); //repeat the message back to the user of the server!
+  }
+});
+// EVENTS END
+```
+
+#### CommonJS
 ##### CommonJS
 ```js
 const req = (async function () {
@@ -36,7 +68,6 @@ const req = (async function () {
   // BOT CLIENT  
   const client = new Bot({
     token: process.env.token, // default: null; your token is here, authorizes your bot to our servers.
-    name: 'Bot', // default: Bot; your bot name is here, will be included in different messages your bot sends.
     channels: ["revolution~chat"]
   });
 
@@ -58,38 +89,6 @@ const req = (async function () {
   });
   // EVENTS END
 })();
-```
-
-##### ES6
-```js
-// NESSACERY IMPORTS
-import { Bot } from 'revolution.js';
-// NESSACERY IMPORTS END
-
-// BOT CLIENT  
-const client = new Bot({
-  token: process.env.token, // default: null; your token is here, authorizes your bot to our servers.
-  name: 'Bot', // default: Bot; your bot name is here, will be included in different messages your bot sends.
-  channels: ["revolution~chat"]
-});
-
-await client.run()
-
-// BOT CLIENT END
-console.log(client)
-// EVENTS
-  
-client.listen("ready", () => {
-  console.log("Hello. The bot is online!")
-});
-  
-client.listen("server_message", async (id, data) => {
-  console.log("A message has been sent by my users!");
-  if (data.content === ".super") {
-    await data.channel.send(data.content); //repeat the message back to the user of the server!
-  }
-});
-// EVENTS END
 ```
 
 #### Commands
