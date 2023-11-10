@@ -215,10 +215,11 @@ export class Message {
     }
     const userID = obj.author_id
     if (userID in bot.cache) {
-      this.sent_by = new Member(bot.cache[userID], server, bot)
+      this.author = new Member(bot.cache[userID], server, bot)
     } else {
-      this.sent_by = new PartialMember({"bot": !!obj.bot, "name": obj.sent_by, "id": obj.author_id, "server": server}, bot)
+      this.author = new PartialMember({"bot": !!obj.bot, "name": obj.sent_by, "id": obj.author_id, "server": server}, bot)
     }
+    this.sent_by = this.author
     this.timestamp = new Date(obj.timestamp)
     this.channel = new Channel(obj.channel, bot)
     this._bot = bot
@@ -229,7 +230,7 @@ export class Message {
       method: "GET",
       headers: {
         id: this.channel.id,
-        message,
+        message: message.replaceAll("\n", "<br/>"),
         "sent-by": this._bot.bot.name,
         token: this._bot.token
       }
@@ -258,7 +259,7 @@ export class Channel {
       method: "GET",
       headers: {
         id: this.id,
-        message,
+        message: message.replaceAll("\n", "<br/>"),
         "sent-by": this._bot.bot.name,
         token: this._bot.token
       }
@@ -376,6 +377,46 @@ export class Member {
     const sendRes = await sendReq.json()
     this._bot.cache[this.id] = sendRes
     return new Member(sendRes, this.server, this._bot)
+  }
+  async createDM () {
+    const sendReq = await fetch(this._bot.endpoint + "/api/dms/add", {
+      method: "POST",
+      body: JSON.stringify({
+        username: this.name + "#" + this.discriminator
+      }),
+      headers: {
+        token: this._bot.token
+      }
+    })
+    const sendRes = await sendReq.text()
+    return new DMChannel(sendRes, this._bot)
+  }
+}
+
+export class DMChannel {
+  constructor (id, bot) {
+    this.bot = bot
+    this.id = id
+    this._bot = bot
+  }
+  async send (message) {
+    const sendReq = await fetch(this._bot.endpoint + "/send_message/d/" + this.id, {
+      method: "GET",
+      headers: {
+        message: message.replaceAll("\n", "<br/>"),
+        token: this._bot.token
+      }
+    })
+    console.log(await sendReq.text())
+    const sendRes = await sendReq.json()
+    return sendRes
+  }
+  async fetch_messages () {
+    const sendReq = await fetch(this._bot.endpoint + "/get_new_messages/d/" + this.id, {
+      method: "GET"
+    })
+    const sendRes = await sendReq.json()
+    return sendRes.messages.map(msg => new Message(msg, this._bot))
   }
 }
 
