@@ -411,9 +411,13 @@ export class DMChannel {
     const sendRes = await sendReq.json()
     return sendRes
   }
-  async fetch_messages () {
+  async fetch_messages (amount, skip) {
     const sendReq = await fetch(this._bot.endpoint + "/get_new_messages/d/" + this.id, {
-      method: "GET"
+      method: "GET",
+      headers: {
+        "amount": amount,
+        "skip": skip
+      }
     })
     const sendRes = await sendReq.json()
     return sendRes.messages.map(msg => new Message(msg, this._bot))
