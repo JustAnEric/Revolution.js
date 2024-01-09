@@ -40,8 +40,8 @@ export class Bot {
     this.bot = {
       "name": config.name || "Bot"
     }
-    this.endpoint = config.endpoint || "https://revolution-web.repl.co"
-    this.socketURL = config.socketURL || "wss://revolution-web.repl.co"
+    this.endpoint = config.endpoint || "https://revolutionweb.onrender.com"
+    this.socketURL = config.socketURL || "wss://revolutionweb.onrender.com"
     this.cache = {}
     if (config.commands) {
       this.commands = new commands(this, config.prefix, config.help)
